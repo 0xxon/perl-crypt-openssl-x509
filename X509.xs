@@ -32,6 +32,7 @@ typedef ASN1_OBJECT* Crypt__OpenSSL__X509__ObjectID;
 typedef X509_NAME* Crypt__OpenSSL__X509__Name;
 typedef X509_NAME_ENTRY* Crypt__OpenSSL__X509__Name_Entry;
 typedef X509_CRL* Crypt__OpenSSL__X509__CRL;
+typedef X509_STORE* Crypt__OpenSSL__X509__ROOTSTORE;
 
 /* 1.0 backwards compat */
 #ifndef sk_OPENSSL_STRING_num
@@ -288,6 +289,132 @@ new(class)
   }
 
   ASN1_INTEGER_set(X509_get_serialNumber(RETVAL), 0L);
+
+  OUTPUT:
+  RETVAL
+
+Crypt::OpenSSL::X509::ROOTSTORE
+new_rootcerts_from_file(class, string)
+  SV* class
+  SV* string
+
+  PREINIT:
+  X509_STORE* ctx;
+  X509_LOOKUP *lookup;
+  char *path;
+  STRLEN len;
+  int i; 
+
+  CODE:
+  i = 0; 
+
+  path = SvPV(string, len);
+
+  ctx = X509_STORE_new();
+  if ( ctx == NULL ) croak("%s: Failed to create X509_STORE", SvPV_nolen(class));
+  
+  lookup=X509_STORE_add_lookup(ctx,X509_LOOKUP_file());
+  if ( lookup == NULL ) croak("%s: Failed to create X509_LOOKUP", SvPV_nolen(class));
+  i= X509_LOOKUP_load_file(lookup,path,X509_FILETYPE_PEM);
+  if ( !i ) croak("%s: Failed to load file %s", SvPV_nolen(class), path);
+
+  ERR_clear_error();
+
+  RETVAL = (X509_STORE*) ctx;
+
+  OUTPUT: 
+  RETVAL
+
+SV*
+verify(store, listref, string, time = 0)
+  Crypt::OpenSSL::X509::ROOTSTORE store
+  SV *listref
+  SV *string
+  I32 time
+
+  PREINIT:
+  AV *list;
+  BIO *bio;
+  STRLEN len;
+  char *cert;
+  STACK_OF(X509) *untrusted;
+  I32 listlen;
+  I32 i;
+
+  CODE:
+  BIO *bio_err=NULL;
+  //X509_NAME *name;
+  untrusted = NULL;
+
+  if (!SvROK(listref)) croak ("Did not get a list reference");
+  list = (AV*) SvRV(listref);
+ 
+
+  if (bio_err == NULL)
+  if ((bio_err=BIO_new(BIO_s_file())) != NULL)
+   BIO_set_fp(bio_err,stderr,BIO_NOCLOSE|BIO_FP_TEXT); 
+
+  listlen = av_len (list);
+  if ( listlen >= 0 ) {
+     //printf("LIBRARY: HAVE untrusted\n");
+
+     untrusted = sk_X509_new_null();
+
+     for ( i = 0; i <= listlen; i++ ) {
+       if ( ! av_exists(list, i ) ) {
+         croak("Untrusted list has uninitialized entries in verify");
+       }
+
+       STRLEN certlen;
+       char* utcert = SvPV(*av_fetch(list, i, 0), certlen);
+
+       bio = BIO_new_mem_buf(utcert, certlen);
+       if ( !bio ) croak("Failed to create untrusted BIO in verify");
+       X509 *xut = d2i_X509_bio(bio, NULL);
+       BIO_free_all(bio);
+
+       if ( !xut ) {
+         croak("Untrusted certificate could not be read");
+       }
+
+       sk_X509_push(untrusted, xut);
+       //printf("Pushed\n");
+     }
+
+  } //else {
+  // printf("LIBRARY: No untrusted\n");
+  //}
+  
+  cert = SvPV(string, len);
+  bio = BIO_new_mem_buf(cert, len);
+
+  if ( !bio ) croak("Failed to create BIO in verify");
+  X509* x = d2i_X509_bio(bio, NULL);
+  BIO_free_all(bio);
+
+  if (! x ) croak("Could not read certificate in verify");
+
+  /* name = X509_get_subject_name(x);
+    X509_NAME_print_ex(bio_err, name, 0, (XN_FLAG_SEP_CPLUS_SPC | ASN1_STRFLGS_UTF8_CONVERT) & ~ASN1_STRFLGS_ESC_MSB);
+  printf("\n"); */
+  
+  X509_STORE_CTX csc;
+  X509_STORE_CTX_init(&csc, store, x, untrusted);
+  if ( time > 0 )
+    X509_STORE_CTX_set_time(&csc, 0, time);
+  int result = X509_verify_cert(&csc);
+  if ( result != 1 ) 
+    result = -X509_STORE_CTX_get_error(&csc);
+  X509_STORE_CTX_cleanup(&csc);
+
+  ERR_print_errors(bio_err);
+  X509_free(x);
+
+  if ( listlen >= 0 ) {
+     sk_X509_pop_free(untrusted, X509_free);
+  }
+
+  RETVAL = newSViv(result);
 
   OUTPUT:
   RETVAL
@@ -572,7 +699,7 @@ modulus(x509)
 
     BIO_free_all(bio);
     EVP_PKEY_free(pkey);
-    croak("Modulus is unavailable\n");
+    croak("Public key is unavailable\n");
   }
 
   if (pkey->type == EVP_PKEY_RSA) {
