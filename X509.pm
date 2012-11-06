@@ -233,6 +233,10 @@ Signature algorithm name as a string.
 
 Public key algorithm name as a string.
 
+=item curve
+
+Name of the EC curve used in the public key.
+
 =back
 
 =head2 X509 METHODS
