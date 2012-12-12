@@ -1,6 +1,7 @@
 use inc::Module::Install;
 
 use Config;
+use Alien::OpenSSL;
 
 name('Crypt-OpenSSL-X509');
 license('perl');
@@ -9,6 +10,7 @@ all_from('X509.pm');
 
 homepage 'https://github.com/dsully/perl-crypt-openssl-x509';
 bugtracker 'https://github.com/dsully/perl-crypt-openssl-x509/issues';
+configure_requires 'Alien::OpenSSL' => 0.02;
 
 requires_external_cc();
 
@@ -16,8 +18,11 @@ if ($Config::Config{myuname} =~ /^Win(32|64) strawberry-perl\b/) {
     cc_lib_links("eay$1");
 }
 else {
-    cc_inc_paths('/usr/include/openssl', '/usr/local/include/ssl', '/usr/local/ssl/include');
-    cc_lib_paths('/usr/lib', '/usr/local/lib', '/usr/local/ssl/lib');
+    my $cflags = Alien::OpenSSL->cflags;
+    my $ldflags = Alien::OpenSSL->libs;
+
+    inc $cflags;
+    libs $ldflags;
 
     cc_lib_links('crypto');
 
