@@ -146,6 +146,12 @@ Crypt::OpenSSL::X509 - Perl extension to OpenSSL's X509 API.
     print $oid, " ", $ext->object()->name(), ": ", $ext->value(), "\n";
   }
 
+  my $rootstore = Crypt::OpenSSL::X509::Rootstore->new_from_file('roots.pem');
+  if ( $rootstore->verify($x509) == 1 ) {
+    # certificate validates against the loaded root certificate list
+  } else {
+    # invalid certificate
+  }
 
 =head1 ABSTRACT
 
@@ -412,6 +418,7 @@ Dan Sully, E<lt>daniel@cpan.orgE<gt>
 
 David O'Callaghan, E<lt>david.ocallaghan@cs.tcd.ieE<gt>
 Daniel Kahn Gillmor E<lt>dkg@fifthhorseman.netE<gt>
+Johanna Amann E<lt>johanna@icir.orgE<gt>
 
 =head1 COPYRIGHT AND LICENSE
 

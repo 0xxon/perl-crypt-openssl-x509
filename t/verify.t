@@ -1,15 +1,15 @@
 use strict;
 use warnings;
 
-use Test::More tests => 6;
+use Test::More tests => 14;
 
 use 5.10.1;
 
 use Crypt::OpenSSL::X509;
 use Data::Dumper;
 
-my $rootstore = Crypt::OpenSSL::X509::ROOTSTORE->new_from_file('certs/root.ca');
-isa_ok($rootstore, 'Crypt::OpenSSL::X509::ROOTSTORE');
+my $rootstore = Crypt::OpenSSL::X509::Rootstore->new_from_file('certs/root.ca');
+isa_ok($rootstore, 'Crypt::OpenSSL::X509::Rootstore');
 
 my $selfsigned = Crypt::OpenSSL::X509->new_from_file('certs/selfsigned.pem');
 isa_ok($selfsigned, 'Crypt::OpenSSL::X509');

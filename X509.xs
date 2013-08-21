@@ -36,7 +36,7 @@ typedef ASN1_OBJECT* Crypt__OpenSSL__X509__ObjectID;
 typedef X509_NAME* Crypt__OpenSSL__X509__Name;
 typedef X509_NAME_ENTRY* Crypt__OpenSSL__X509__Name_Entry;
 typedef X509_CRL* Crypt__OpenSSL__X509__CRL;
-typedef X509_STORE* Crypt__OpenSSL__X509__ROOTSTORE;
+typedef X509_STORE* Crypt__OpenSSL__X509__Rootstore;
 
 /* 1.0 backwards compat */
 #ifndef sk_OPENSSL_STRING_num
@@ -241,11 +241,11 @@ void _decode_netscape(BIO *bio, X509 *x509) {
 #endif
 }
 
-MODULE = Crypt::OpenSSL::X509       PACKAGE = Crypt::OpenSSL::X509::ROOTSTORE
+MODULE = Crypt::OpenSSL::X509       PACKAGE = Crypt::OpenSSL::X509::Rootstore
 
 PROTOTYPES: DISABLE
 
-Crypt::OpenSSL::X509::ROOTSTORE
+Crypt::OpenSSL::X509::Rootstore
 new_from_file(class, string)
   SV* class
   SV* string
@@ -279,7 +279,7 @@ new_from_file(class, string)
 
 SV*
 verify(store, verifycert, listref = NO_INIT, purpose = -1, time = 0)
-  Crypt::OpenSSL::X509::ROOTSTORE store
+  Crypt::OpenSSL::X509::Rootstore store
   Crypt::OpenSSL::X509 verifycert 
   SV *listref
   I32 purpose
