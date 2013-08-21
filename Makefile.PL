@@ -9,6 +9,7 @@ perl_version('5.005');
 all_from('X509.pm');
 
 homepage 'https://github.com/dsully/perl-crypt-openssl-x509';
+repository 'https://github.com/dsully/perl-crypt-openssl-x509';
 bugtracker 'https://github.com/dsully/perl-crypt-openssl-x509/issues';
 configure_requires 'Alien::OpenSSL' => 0.02;
 

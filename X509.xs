@@ -110,7 +110,7 @@ static SV* sv_bio_utf8_on(BIO *bio) {
     const U8* cur;
 
     while ((start < end) && !is_utf8_string_loclen(start, len, &cur, 0)) {
-      sv_catpvn(nsv, (const char*)start, (cur - start) - 1);  /* text that was ok */
+      sv_catpvn(nsv, (const char*)start, (cur - start) + 1);  /* text that was ok */
       sv_catpvn(nsv, (const char*)utf8_substitute_char, 3);  /* insert \x{fffd} */
       start = cur + 1;
       len = end - cur;
@@ -233,10 +233,10 @@ void _decode_netscape(BIO *bio, X509 *x509) {
     os.data   = (unsigned char *)NETSCAPE_CERT_HDR;
     os.length = strlen(NETSCAPE_CERT_HDR);
     ah.header = &os;
-    ah.data   = x509;
+    ah.data   = (char *)x509;
     ah.meth   = X509_asn1_meth();
 
-    ASN1_i2d_bio((i2d_of_void*)i2d_ASN1_HEADER, bio, (unsigned char *)&ah);
+    ASN1_i2d_bio(i2d_ASN1_HEADER, bio, (unsigned char *)&ah);
 
 #endif
 }
@@ -559,9 +559,8 @@ accessor(x509)
 
     i2a_ASN1_OBJECT(bio, x509->sig_alg->algorithm);
   } else if ( ix == 10 ) {
-  
-    i2a_ASN1_OBJECT(bio, x509->cert_info->key->algor->algorithm);
 
+    i2a_ASN1_OBJECT(bio, x509->cert_info->key->algor->algorithm);
   }
 
   RETVAL = sv_bio_final(bio);
@@ -645,7 +644,7 @@ as_string(x509, format = FORMAT_PEM)
 SV*
 bit_length(x509)
   Crypt::OpenSSL::X509 x509;
-  
+
   PREINIT:
   EVP_PKEY *pkey;
   int length;
@@ -667,12 +666,12 @@ bit_length(x509)
 #ifndef OPENSSL_NO_EC
     case EVP_PKEY_EC:
     {
-      const EC_GROUP *group;       
+      const EC_GROUP *group;
       BIGNUM* ec_order;
       ec_order = BN_new();
       if ( !ec_order ) {
         EVP_PKEY_free(pkey);
-	croak("Could not malloc bignum");
+        croak("Could not malloc bignum");
       }
       //
       if ( (group = EC_KEY_get0_group(pkey->pkey.ec)) == NULL) {
@@ -716,7 +715,7 @@ curve(x509)
     croak("Public key is unavailable\n");
   }
   if ( pkey->type == EVP_PKEY_EC ) {
-    const EC_GROUP *group; 
+    const EC_GROUP *group;
     int nid;
     if ( (group = EC_KEY_get0_group(pkey->pkey.ec)) == NULL) {
        EVP_PKEY_free(pkey);
@@ -769,7 +768,7 @@ modulus(x509)
 #ifndef OPENSSL_NO_EC
   } else if ( pkey->type == EVP_PKEY_EC ) {
     const EC_POINT *public_key;
-    const EC_GROUP *group; 
+    const EC_GROUP *group;
     BIGNUM  *pub_key=NULL;
     if ( (group = EC_KEY_get0_group(pkey->pkey.ec)) == NULL) {
        BIO_free_all(bio);
@@ -939,20 +938,6 @@ pubkey(x509)
   OUTPUT:
   RETVAL
 
-SV*
-pub_exponent(x509)
-    Crypt::OpenSSL::X509 x509
-  PREINIT:
-    EVP_PKEY *pkey;
-    BIO *bio;
-  CODE:
-    bio = sv_bio_create();
-    pkey = X509_get_pubkey(x509);
-    BN_print(bio,pkey->pkey.rsa->e);
-    RETVAL = sv_bio_final(bio);
-  OUTPUT:
-  RETVAL
-
 char*
 pubkey_type(x509)
         Crypt::OpenSSL::X509 x509;
@@ -965,16 +950,16 @@ pubkey_type(x509)
         if(!pkey)
             XSRETURN_UNDEF;
 
-        if(pkey->type == EVP_PKEY_DSA){
+        if (pkey->type == EVP_PKEY_DSA) {
             RETVAL="dsa";
-        }
-        else if(pkey->type == EVP_PKEY_RSA){
+
+        } else if (pkey->type == EVP_PKEY_RSA) {
             RETVAL="rsa";
 #ifndef OPENSSL_NO_EC
-	} else if ( pkey->type == EVP_PKEY_EC ) {
-	    RETVAL="ec";
+        } else if ( pkey->type == EVP_PKEY_EC ) {
+            RETVAL="ec";
 #endif
-        } 
+        }
 
     OUTPUT:
     RETVAL
