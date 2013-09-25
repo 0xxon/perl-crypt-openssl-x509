@@ -285,6 +285,9 @@ verify(store, verifycert, listref = NO_INIT, purpose = -1, time = 0)
   I32 purpose
   I32 time
 
+  ALIAS:
+  verify_chain = 1
+
   PREINIT:
   AV *list;
   STACK_OF(X509) *untrusted;
@@ -342,6 +345,32 @@ verify(store, verifycert, listref = NO_INIT, purpose = -1, time = 0)
   if ( result != 1 ) 
     result = -X509_STORE_CTX_get_error(&csc);
 
+  if ( result == 1 && ix == 1 ) { // we want to return the chain of valid certificates. create it...
+    STACK_OF(X509)* chain = X509_STORE_CTX_get1_chain(&csc);
+
+    if ( !chain ) 
+      croak("Could not resolve a valid chain?");
+
+    int num_certs = sk_X509_num(chain);
+
+    AV* certificateAV = newAV();
+
+    for ( int i = 0; i < num_certs; i++ ) {
+      X509* currcert = sk_X509_value(chain, i);
+      
+      if ( !currcert ) {
+        croak("Internal error: got NULL in chain");
+      }
+
+      SV* rv = sv_make_ref("Crypt::OpenSSL::X509", (void*)currcert); // from here it is hopefully ref-counted by perl.
+
+      av_push(certificateAV, rv);
+    }
+    
+    sk_X509_free(chain);
+    RETVAL = newRV_noinc((SV*) certificateAV);
+  } 
+
   X509_STORE_CTX_cleanup(&csc);
 
   //ERR_print_errors(bio_err);
@@ -351,7 +380,11 @@ verify(store, verifycert, listref = NO_INIT, purpose = -1, time = 0)
      sk_X509_free(untrusted);
   }
 
-  RETVAL = newSViv(result);
+  if ( ix == 0 || result != 1 ) 
+    RETVAL = newSViv(result);
+  else if ( ix == 1 ) {} // retval is already set.
+  else 
+    croak("Internal error");
 
   OUTPUT:
   RETVAL
