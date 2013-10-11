@@ -297,6 +297,7 @@ verify(store, verifycert, listref = NO_INIT, purpose = -1, time = 0)
   CODE:
   //BIO *bio_err=NULL; // uncomment bio_err to get certificate validation error messages to console
   untrusted = NULL;
+  RETVAL = NULL;
 
   if ( items >= 3 ) {
     // we have a list of untrusted certificates
@@ -354,8 +355,9 @@ verify(store, verifycert, listref = NO_INIT, purpose = -1, time = 0)
     int num_certs = sk_X509_num(chain);
 
     AV* certificateAV = newAV();
+    int i;
 
-    for ( int i = 0; i < num_certs; i++ ) {
+    for ( i = 0; i < num_certs; i++ ) {
       X509* currcert = sk_X509_value(chain, i);
       
       if ( !currcert ) {
