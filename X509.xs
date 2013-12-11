@@ -236,7 +236,7 @@ void _decode_netscape(BIO *bio, X509 *x509) {
     ah.data   = (char *)x509;
     ah.meth   = X509_asn1_meth();
 
-    ASN1_i2d_bio(i2d_ASN1_HEADER, bio, (unsigned char *)&ah);
+    ASN1_i2d_bio((i2d_of_void *)i2d_ASN1_HEADER, bio, (unsigned char *)&ah);
 
 #endif
 }
@@ -739,11 +739,11 @@ curve(x509)
   Crypt::OpenSSL::X509 x509;
 
   CODE:
+  EVP_PKEY *pkey;
 #ifdef OPENSSL_NO_EC
   if ( x509 ) {} // fix unused variable warning.
   croak("OpenSSL without EC-support");
 #else
-  EVP_PKEY *pkey;
   pkey = X509_extract_key(x509);
   if (pkey == NULL) {
     EVP_PKEY_free(pkey);

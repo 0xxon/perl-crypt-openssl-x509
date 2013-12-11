@@ -16,7 +16,7 @@ configure_requires 'Alien::OpenSSL' => 0.02;
 requires_external_cc();
 
 if ($Config::Config{myuname} =~ /^Win(32|64) strawberry-perl\b/) {
-    cc_lib_links("eay$1");
+    libs ["eay$1"];
 }
 else {
     my $cflags = Alien::OpenSSL->cflags;
@@ -25,9 +25,15 @@ else {
     inc $cflags;
     libs $ldflags;
 
-    cc_lib_links('crypto');
+#    libs '-L/usr/lib -L/usr/local/lib -L/usr/local/ssl/lib -lcrypto';
 
-    cc_optimize_flags('-O2 -g -Wall -Werror');
+    if ($Config::Config{myuname} =~ /darwin/i) {
+      cc_optimize_flags('-O2 -g -Wall -Werror -Wno-deprecated-declarations');
+    } elsif ($Config::Config{myuname} =~ /sunos|solaris/i) {
+      # Any SunStudio flags?
+    } else {
+      cc_optimize_flags('-O2 -g -Wall -Werror');
+    }
 }
 
 auto_install();
