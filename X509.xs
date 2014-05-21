@@ -255,16 +255,16 @@ new_from_file(class, string)
   X509_LOOKUP *lookup;
   char *path;
   STRLEN len;
-  int i; 
+  int i;
 
   CODE:
-  i = 0; 
+  i = 0;
 
   path = SvPV(string, len);
 
   ctx = X509_STORE_new();
   if ( ctx == NULL ) croak("%s: Failed to create X509_STORE", SvPV_nolen(class));
-  
+ 
   lookup=X509_STORE_add_lookup(ctx,X509_LOOKUP_file());
   if ( lookup == NULL ) croak("%s: Failed to create X509_LOOKUP", SvPV_nolen(class));
   i= X509_LOOKUP_load_file(lookup,path,X509_FILETYPE_PEM);
@@ -274,7 +274,7 @@ new_from_file(class, string)
 
   RETVAL = (X509_STORE*) ctx;
 
-  OUTPUT: 
+  OUTPUT:
   RETVAL
 
 SV*
@@ -328,28 +328,28 @@ verify(store, verifycert, listref = NO_INIT, purpose = -1, time = 0)
        sk_X509_push(untrusted, ut);
      }
 
-  }   
-  
+  }
+
 
   X509_STORE_CTX csc;
   X509_STORE_CTX_init(&csc, store, verifycert, untrusted);
 
   if ( time != 0 )
     X509_STORE_CTX_set_time(&csc, 0, time);
-    
+
   if ( purpose >= 0 ) {
-    if ( ! X509_VERIFY_PARAM_set_purpose(csc.param, purpose) == 1 ) 
+    if ( ! X509_VERIFY_PARAM_set_purpose(csc.param, purpose) == 1 )
       croak("Could not set purpose to %d", purpose);
   }
 
   int result = X509_verify_cert(&csc);
-  if ( result != 1 ) 
+  if ( result != 1 )
     result = -X509_STORE_CTX_get_error(&csc);
 
   if ( result == 1 && ix == 1 ) { // we want to return the chain of valid certificates. create it...
     STACK_OF(X509)* chain = X509_STORE_CTX_get1_chain(&csc);
 
-    if ( !chain ) 
+    if ( !chain )
       croak("Could not resolve a valid chain?");
 
     int num_certs = sk_X509_num(chain);
@@ -359,7 +359,7 @@ verify(store, verifycert, listref = NO_INIT, purpose = -1, time = 0)
 
     for ( i = 0; i < num_certs; i++ ) {
       X509* currcert = sk_X509_value(chain, i);
-      
+
       if ( !currcert ) {
         croak("Internal error: got NULL in chain");
       }
@@ -368,10 +368,10 @@ verify(store, verifycert, listref = NO_INIT, purpose = -1, time = 0)
 
       av_push(certificateAV, rv);
     }
-    
+
     sk_X509_free(chain);
     RETVAL = newRV_noinc((SV*) certificateAV);
-  } 
+  }
 
   X509_STORE_CTX_cleanup(&csc);
 
@@ -382,10 +382,10 @@ verify(store, verifycert, listref = NO_INIT, purpose = -1, time = 0)
      sk_X509_free(untrusted);
   }
 
-  if ( ix == 0 || result != 1 ) 
+  if ( ix == 0 || result != 1 )
     RETVAL = newSViv(result);
   else if ( ix == 1 ) {} // retval is already set.
-  else 
+  else
     croak("Internal error");
 
   OUTPUT:
