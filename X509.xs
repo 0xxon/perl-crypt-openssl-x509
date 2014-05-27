@@ -244,6 +244,22 @@ void _decode_netscape(BIO *bio, X509 *x509) {
 MODULE = Crypt::OpenSSL::X509       PACKAGE = Crypt::OpenSSL::X509::Rootstore
 
 PROTOTYPES: DISABLE
+Crypt::OpenSSL::X509::Rootstore
+new(class)
+
+	CODE:
+	RETVAL = X509_STORE_new();
+
+	OUTPUT:
+	RETVAL
+
+void
+add_cert(store, cert)
+	Crypt::OpenSSL::X509::Rootstore store
+	Crypt::OpenSSL::X509 cert
+
+	CODE:
+	X509_STORE_add_cert(store, cert);
 
 Crypt::OpenSSL::X509::Rootstore
 new_from_file(class, string)
@@ -264,7 +280,7 @@ new_from_file(class, string)
 
   ctx = X509_STORE_new();
   if ( ctx == NULL ) croak("%s: Failed to create X509_STORE", SvPV_nolen(class));
- 
+
   lookup=X509_STORE_add_lookup(ctx,X509_LOOKUP_file());
   if ( lookup == NULL ) croak("%s: Failed to create X509_LOOKUP", SvPV_nolen(class));
   i= X509_LOOKUP_load_file(lookup,path,X509_FILETYPE_PEM);
@@ -280,7 +296,7 @@ new_from_file(class, string)
 SV*
 verify(store, verifycert, listref = NO_INIT, purpose = -1, time = 0)
   Crypt::OpenSSL::X509::Rootstore store
-  Crypt::OpenSSL::X509 verifycert 
+  Crypt::OpenSSL::X509 verifycert
   SV *listref
   I32 purpose
   I32 time
@@ -306,10 +322,10 @@ verify(store, verifycert, listref = NO_INIT, purpose = -1, time = 0)
     list = (AV*) SvRV(listref);
     listlen = av_len (list);
   }
- 
+
   //if (bio_err == NULL)
   //if ((bio_err=BIO_new(BIO_s_file())) != NULL)
-  //BIO_set_fp(bio_err,stderr,BIO_NOCLOSE|BIO_FP_TEXT); 
+  //BIO_set_fp(bio_err,stderr,BIO_NOCLOSE|BIO_FP_TEXT);
 
   if ( listlen >= 0 ) {
      untrusted = sk_X509_new_null();
@@ -382,8 +398,10 @@ verify(store, verifycert, listref = NO_INIT, purpose = -1, time = 0)
      sk_X509_free(untrusted);
   }
 
-  if ( ix == 0 || result != 1 )
+  if ( ix == 0 )
     RETVAL = newSViv(result);
+	else if ( ix == 1 && result != 1 )
+		XSRETURN_UNDEF;
   else if ( ix == 1 ) {} // retval is already set.
   else
     croak("Internal error");
