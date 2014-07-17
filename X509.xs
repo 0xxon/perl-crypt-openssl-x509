@@ -957,21 +957,17 @@ pubkey(x509)
   CODE:
 
   pkey = X509_get_pubkey(x509);
-  bio  = sv_bio_create();
 
   if (pkey == NULL) {
-
-    BIO_free_all(bio);
     EVP_PKEY_free(pkey);
     croak("Public Key is unavailable\n");
   }
 
+  bio  = sv_bio_create();
+
   if (pkey->type == EVP_PKEY_RSA) {
-
     PEM_write_bio_RSAPublicKey(bio, pkey->pkey.rsa);
-
   } else if (pkey->type == EVP_PKEY_DSA) {
-
     PEM_write_bio_DSA_PUBKEY(bio, pkey->pkey.dsa);
 #ifndef OPENSSL_NO_EC
   } else if ( pkey->type == EVP_PKEY_EC ) {
@@ -984,6 +980,32 @@ pubkey(x509)
     croak("Wrong Algorithm type\n");
   }
 
+  EVP_PKEY_free(pkey);
+
+  RETVAL = sv_bio_final(bio);
+
+  OUTPUT:
+  RETVAL
+
+SV*
+spki(x509)
+  Crypt::OpenSSL::X509 x509;
+
+  PREINIT:
+  EVP_PKEY *pkey;
+  BIO *bio;
+
+  CODE:
+
+  pkey = X509_get_pubkey(x509);
+
+  if (pkey == NULL) {
+    EVP_PKEY_free(pkey);
+    croak("Public Key is unavailable\n");
+  }
+
+  bio  = sv_bio_create();
+  i2d_PUBKEY_bio(bio, pkey);
   EVP_PKEY_free(pkey);
 
   RETVAL = sv_bio_final(bio);
