@@ -756,8 +756,12 @@ const char*
 curve(x509)
   Crypt::OpenSSL::X509 x509;
 
-  CODE:
+  PREINIT:
+#ifndef OPENSSL_NO_EC
   EVP_PKEY *pkey;
+#endif
+
+  CODE:
 #ifdef OPENSSL_NO_EC
   if ( x509 ) {} // fix unused variable warning.
   croak("OpenSSL without EC-support");
@@ -895,10 +899,14 @@ fingerprint_md5(x509)
 
   ALIAS:
   fingerprint_sha1 = 1
+  fingerprint_sha224 = 2
+  fingerprint_sha256 = 3
+  fingerprint_sha384 = 4
+  fingerprint_sha512 = 5
 
   PREINIT:
 
-  const EVP_MD *mds[] = { EVP_md5(), EVP_sha1() };
+  const EVP_MD *mds[] = { EVP_md5(), EVP_sha1(), EVP_sha224(), EVP_sha256(), EVP_sha384(), EVP_sha512() };
   unsigned char md[EVP_MAX_MD_SIZE];
   int i;
   unsigned int n;

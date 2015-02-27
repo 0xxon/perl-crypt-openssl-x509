@@ -27,6 +27,10 @@ else {
 
 #    libs '-L/usr/lib -L/usr/local/lib -L/usr/local/ssl/lib -lcrypto';
 
+    inc '-I/usr/include/openssl -I/usr/local/include/ssl -I/usr/local/ssl/include';
+
+    libs '-L/usr/lib -L/usr/local/lib -L/usr/local/ssl/lib -lcrypto';
+
     if ($Config::Config{myuname} =~ /darwin/i) {
       cc_optimize_flags('-O2 -g -Wall -Werror -Wno-deprecated-declarations');
     } elsif ($Config::Config{myuname} =~ /sunos|solaris/i) {

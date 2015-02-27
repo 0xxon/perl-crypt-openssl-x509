@@ -1,9 +1,11 @@
 certs/thawte.pem
+certs/thawte-ec.pem
 certs/vsign1.pem
 certs/balt.pem
 certs/broken-utf8.pem
 certs/turk.pem
 Changes
+hints/MSWin32.pl
 inc/Module/AutoInstall.pm
 inc/Module/Install.pm
 inc/Module/Install/AutoInstall.pm
@@ -24,7 +26,9 @@ META.yml			Module meta-data (added by MakeMaker)
 README
 t/pod.t
 t/utf8.t
+t/00-version.t
 t/x509.t
+t/x509-ec.t
 TODO
 typemap
 X509.pm
