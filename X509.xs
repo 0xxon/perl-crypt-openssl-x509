@@ -1021,6 +1021,67 @@ spki(x509)
   OUTPUT:
   RETVAL
 
+SV*
+issuer_name_hash(x509)
+  Crypt::OpenSSL::X509 x509;
+
+	PREINIT:
+	X509_NAME *issuer_name;
+	const EVP_MD *dgst;
+	BIO *bio;
+
+	CODE:
+
+	issuer_name = X509_get_issuer_name(x509);
+	dgst = EVP_sha1();
+
+	if (issuer_name == NULL)
+		{
+		croak("fail to get issuer name from certificate");
+		}
+
+	/*
+	if (strcmp(h, "sha1") == 0)
+		dgst = EVP_sha1();
+	else if (strcmp(h, "sha224") == 0)
+		dgst = EVP_sha224();
+	else if (strcmp(h, "sha256") == 0)
+		dgst = EVP_sha256();
+	else if (strcmp(h, "sha384") == 0)
+		dgst = EVP_sha384();
+	else if (strcmp(h, "sha512") == 0)
+		dgst = EVP_sha512();
+	else
+		{
+		reporter->Error("Unknown digest!");
+		return NULL;
+		}
+	if (dgst == NULL)
+		{
+		builtin_error("fail to allocate digest");
+		return NULL;
+		}
+	*/
+
+	unsigned char md[EVP_MAX_MD_SIZE];
+	unsigned int len = 0;
+	ASN1_OCTET_STRING *oct_str = ASN1_STRING_type_new(V_ASN1_OCTET_STRING);
+	//int new_len = -1;
+  bio = sv_bio_create();
+	char buf[1024];
+	memset(buf, 0, sizeof(buf));
+
+	if (!X509_NAME_digest(issuer_name, dgst, md, &len))
+		croak("Error in name digest");
+	if (!ASN1_OCTET_STRING_set(oct_str, md, len))
+		croak("Error in name digest");
+	if (i2a_ASN1_STRING(bio, oct_str, V_ASN1_OCTET_STRING) <= 0)
+		croak("Error in name digest");
+
+  RETVAL = sv_bio_final(bio);
+  OUTPUT:
+  RETVAL
+
 char*
 pubkey_type(x509)
         Crypt::OpenSSL::X509 x509;
