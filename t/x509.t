@@ -1,5 +1,5 @@
 
-use Test::More tests => 50;
+use Test::More tests => 55;
 
 BEGIN { use_ok('Crypt::OpenSSL::X509') };
 
@@ -13,6 +13,7 @@ ok($x509->fingerprint_sha224() eq '8F:18:C1:5A:56:E2:24:E4:32:F4:36:CF:2F:EA:C3:
 ok($x509->fingerprint_sha256() eq '13:B8:4A:BA:EC:A3:DE:8C:71:9A:06:7D:E8:CF:18:5F:65:DC:19:E0:3E:BD:92:C2:0B:D3:8C:75:09:7B:E1:13', 'fingerprint_sha256()');
 ok($x509->fingerprint_sha384() eq 'B7:7D:3C:C4:0B:C6:09:76:2B:83:69:3A:38:0F:67:DD:14:8E:C7:AA:EC:49:FC:63:FD:CB:15:7D:F5:B3:41:B6:4D:78:59:CE:50:E8:EE:6D:9A:F3:22:22:B4:00:EB:41', 'fingerprint_sha384()');
 ok($x509->fingerprint_sha512() eq 'DA:8E:92:6E:96:4C:BA:50:A7:2D:57:09:E4:07:E3:79:3A:CD:19:F9:76:1E:FA:85:20:98:9C:A7:19:D6:09:B8:51:E9:DE:8E:D1:A0:65:C8:83:3F:D1:7E:38:FF:DD:43:91:AC:07:4B:4E:B3:82:9B:39:A6:94:81:99:73:E7:A2', 'fingerprint_sha512()');
+ok($x509->issuer_name_hash eq '70E4F4545F8EE6F2BD4E762B8DA183D8E05D4A7D', 'issuer_name_hash');
 
 ok($x509->exponent() eq '10001', 'exponent()');
 ok($x509->pub_exponent() eq '10001', 'pub_exponent()'); # Alias
