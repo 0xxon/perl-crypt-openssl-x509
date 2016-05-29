@@ -182,7 +182,7 @@ static HV* hv_exts(X509* x509, int no_name) {
   sv_2mortal((SV*)RETVAL);
   c = X509_get_ext_count(x509);
 
-  if ( ! c > 0 ) {
+  if ( ! ( c > 0 ) ) {
     croak("No extensions found\n");
   }
 
@@ -354,7 +354,7 @@ verify(store, verifycert, listref = NO_INIT, purpose = -1, time = 0)
     X509_STORE_CTX_set_time(&csc, 0, time);
 
   if ( purpose >= 0 ) {
-    if ( ! X509_VERIFY_PARAM_set_purpose(csc.param, purpose) == 1 )
+    if ( ! (X509_VERIFY_PARAM_set_purpose(csc.param, purpose) == 1) )
       croak("Could not set purpose to %d", purpose);
   }
 
@@ -1132,7 +1132,7 @@ extension(x509, i)
 
   c = X509_get_ext_count(x509);
 
-  if (!c > 0) {
+  if (! (c > 0)) {
     croak("No extensions found\n");
   } else if (i >= c || i < 0) {
     croak("Requested extension index out of range\n");
